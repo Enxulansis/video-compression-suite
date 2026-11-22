@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>视频压缩套件 · Video Compression Suite</title>
+<!-- The page's OWN asset fingerprint, so it can compare itself against what the server
+     is serving right now: if they differ, this tab is a stale cached copy and the app
+     says so instead of silently behaving like the old build. -->
+<meta name="vcs-asset-signature" content="__ASSET_SIG__">
+<link rel="stylesheet" href="/style.css?v=__ASSET_SIG__">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◧</span>
+    <div>
+      <h1>视频压缩套件</h1>
+      <p class="sub">批量压缩 · 格式通吃 · 输出可自由拖动进度条</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button id="historyBtn" class="ghost" type="button">历史</button>
+    <div id="capsBadge" class="badge badge-warn" title="FFmpeg 状态">检测中…</div>
+    <button id="settingsBtn" class="ghost" title="设置 / 关于">
+      ⚙ 设置 <span id="versionBadge" class="version-chip">—</span>
+    </button>
+    <button id="themeBtn" class="ghost" title="切换主题">🌗</button>
+  </div>
+</header>
+
+<!-- Shown only when the page in the browser is older than the backend serving it.
+     This project has repeatedly lost time to "I changed the code and see no
+     difference", and a stale cached page looks exactly like a broken build. -->
+<div id="stalePageBar" class="alert alert-warn hidden"></div>
+
+<div id="capsError" class="alert alert-error hidden"></div>
+
+<main class="layout">
+  <!-- ============================ 左栏：待压缩文件 ============================ -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2><span class="step-number">1</span> 待添加文件 <span id="fileCount" class="pill">0</span></h2>
+      <div class="panel-actions">
+        <button id="clearFilesBtn" class="ghost">清空</button>
+      </div>
+    </div>
+
+    <details class="tools-menu">
+      <summary>工具 · 修复／仅换封装</summary>
+      <div class="mode-row">
+      <label class="switch"><input type="radio" name="mode" value="compress" checked> 压缩</label>
+      <label class="switch"><input type="radio" name="mode" value="repair"> 可拖动性修复</label>
+      <button id="remuxBtn" class="ghost" type="button">仅换封装</button>
+      <span id="modeHint" class="hint"></span>
+      </div>
+    </details>
+
+    <!-- 主要入口：原生对话框，路径 100% 准确 -->
+    <div class="add-methods">
+      <button id="pickBtn" class="primary add-btn">
+        <span class="add-ico">📄</span><b>选择文件</b><i>可多选</i>
+      </button>
+      <button id="pickDirBtn" class="primary add-btn">
+        <span class="add-ico">📁</span><b>选择文件夹</b><i>整个文件夹一次加入</i>
+      </button>
+      <button id="inboxOpenBtn" class="add-btn ghost">
+        <span class="add-ico">📥</span><b>打开收件箱</b><i>往里拖文件即自动加入</i>
+      </button>
+    </div>
+
+    <div id="pickNote" class="hint"></div>
+
+    <div id="dropzone" class="dropzone compact">
+      <p class="hint" id="dropHint">也可以把文件或文件夹拖进来（浏览器模式下拖拽拿不到路径，建议用上面的按钮）</p>
+      <input id="fileInput" type="file" multiple accept="video/*,.mkv,.rmvb,.ts,.m2ts,.flv,.wmv,.avi,.vob" hidden>
+      <input id="dirInput" type="file" webkitdirectory directory multiple hidden>
+    </div>
+
+    <!-- 收件箱说明 -->
+    <div id="inboxPanel" class="inbox-panel hidden">
+      <div class="inbox-head">
+        <b>📥 收件箱</b>
+        <button id="inboxCloseBtn" class="ghost">收起</button>
+      </div>
+      <p class="hint">把视频<b>复制/拖进</b>下面这个文件夹，本程序会自动加入列表（无需任何路径操作）。</p>
+      <div class="loc-detail">
+        <input type="text" id="inboxPath" readonly>
+        <button id="inboxRevealBtn" class="ghost">打开文件夹</button>
+        <button id="inboxScanBtn" class="ghost" title="把收件箱里现有的文件全部加入（包括程序关闭时放入的）">扫描收件箱</button>
+        <button id="inboxClearBtn" class="ghost" title="删除收件箱里的副本；你拖入时的原文件不受影响">清空收件箱</button>
+      </div>
+      <p class="hint">注意：清空收件箱会删除复制进来的文件本身（原文件不受影响）。</p>
+    </div>
+
+    <div id="folderPanel" class="path-fallback hidden">
+      <label>已从文件夹选中 <b id="folderCount">0</b> 个文件。请填写<b>所选文件夹的完整路径</b>（浏览器只给了相对路径）：
+        <input type="text" id="folderBase" spellcheck="false" placeholder="例如 E:\新建文件夹\001\Yuluer">
+      </label>
+      <div class="loc-detail">
+        <button id="folderAddBtn" class="primary">用这个路径加入</button>
+        <button id="serverBrowseBtn" class="ghost">浏览目录…</button>
+        <button id="folderCancelBtn" class="ghost">取消</button>
+      </div>
+      <p class="hint">路径填对后会自动拼出每个文件的完整路径；填错会在列表中显示为无法探测，不会误压文件。</p>
+    </div>
+
+    <div id="pathFallback" class="path-fallback hidden">
+      <label>也可以直接把绝对路径粘贴到这里（每行一个）
+        <textarea id="pathText" rows="3" spellcheck="false" placeholder="E:\videos\a.mp4&#10;E:\videos\b.mkv"></textarea>
+      </label>
+      <button id="pathAddBtn" class="primary">加入列表</button>
+    </div>
+
+    <div id="fileList" class="file-list"></div>
+    <div class="handoff-note"><span class="hint" id="handoffStatus" role="status">添加成功后移入下方队列，在那里查看进度与结果。</span><button id="queueJumpBtn" class="ghost hidden" type="button">查看队列 ↓</button></div>
+
+    <!-- 目录浏览弹层 -->
+    <div id="browserModal" class="modal hidden">
+      <div class="modal-box">
+        <div class="modal-head">
+          <strong>选择目录</strong>
+          <button id="browserClose" class="ghost">✕</button>
+        </div>
+        <div class="modal-path"><input id="browserPath" type="text" spellcheck="false"></div>
+        <div id="browserList" class="modal-list"></div>
+        <div class="modal-foot">
+          <span class="hint">点击文件夹进入；双击文件加入列表</span>
+          <button id="browserPick" class="primary">把本目录视频全部加入</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 右栏：档位与队列 ============================ -->
+  <section class="panel console-panel">
+    <div class="panel-head">
+      <h2><span class="step-number">2</span> 本次压缩</h2>
+      <button id="selectionModeBtn" class="ghost hidden" type="button">切换手动模式</button>
+    </div>
+    <div id="simpleGoals" class="simple-goals" role="group" aria-label="预期压缩程度">
+      <button type="button" data-goal="light"><b>轻度压缩</b><span>优先画质</span></button>
+      <button type="button" data-goal="balanced" class="active" aria-pressed="true"><b>均衡压缩</b><span>日常推荐</span></button>
+      <button type="button" data-goal="strong"><b>较强压缩</b><span>更重视体积</span></button>
+    </div>
+    <p class="hint" id="simpleHint">自动选择算法，保持尺寸、帧率与原有内容；不保证固定倍率。</p>
+    <div class="compatibility-line"><label id="compatibilityHint" for="compatibilityChoice">兼容偏好</label><select id="compatibilityChoice"><option value="broad">尽量广泛播放 · H.264</option><option value="modern" selected>现代设备 · HEVC</option><option value="av1">已确认支持 AV1</option></select></div>
+    <label id="slowAv1Row" class="check hidden"><input type="checkbox" id="slowAv1Choice">允许较慢的软件 AV1 <span class="hint">硬件不可用时仍可压缩，但耗时更长</span></label>
+    <p id="preferencesSaveStatus" class="hint" role="status">偏好会自动保存，供下次使用</p>
+    <div id="profileList" class="profile-list hidden"></div>
+
+      <div class="loc-block">
+        <div class="loc-title">输出保存到哪里</div>
+        <div class="loc-options">
+          <label class="loc-opt">
+            <input type="radio" name="location" value="beside" checked>
+            <span><b>源文件旁边</b><i>每个文件各自放进同目录的 compressed / repaired 子文件夹</i></span>
+          </label>
+          <label class="loc-opt">
+            <input type="radio" name="location" value="default">
+            <span><b>固定默认目录</b><i>所有任务统一存到一个目录，可随时改</i></span>
+          </label>
+          <label class="loc-opt">
+            <input type="radio" name="location" value="custom">
+            <span><b>本次指定目录</b><i>只为这一次运行指定路径</i></span>
+          </label>
+        </div>
+
+        <div id="defaultDirRow" class="loc-detail hidden">
+          <input type="text" id="optDefaultDir" spellcheck="false" placeholder="例如 E:\视频压缩\output\压缩输出">
+          <button id="saveDefaultDirBtn" class="ghost">保存为默认</button>
+          <button id="pickDefaultDirBtn" class="ghost">浏览…</button>
+        </div>
+
+        <div id="customDirRow" class="loc-detail hidden">
+          <input type="text" id="optOutDir" spellcheck="false" placeholder="例如 E:\视频压缩\output\我的输出">
+          <button id="browseCustomDirBtn" class="ghost">浏览…</button>
+        </div>
+
+        <p id="locResolved" class="hint"></p>
+        <p id="spaceNote" class="hint"></p>
+        <div id="sourcePolicyRow" class="source-policy">
+          <label class="check"><input type="checkbox" id="recycleSources">本次压缩成功后，将源文件移入回收站</label>
+          <p class="hint">默认保留源文件；开启后需再次确认，仅对本次添加的任务生效。整批结束后处理通过校验的文件，可从回收站还原；清空回收站后才释放空间。</p>
+        </div>
+      </div>
+
+    <details id="advanced" class="advanced hidden">
+      <summary>高级参数</summary>
+      <label class="check"><input type="checkbox" id="expertMode"> 专家额外参数授权（放宽 GOP 安全约束）</label>
+      <div class="adv-grid">
+        <label>命名模板
+          <input type="text" id="optTemplate" value="{stem}_{profile}_{height}p">
+        </label>
+        <label>缩放（长边像素，0=不缩放）          <input type="number" id="optMaxEdge" value="0" min="0" step="16">
+        </label>
+        <label>缩放比例 %
+          <input type="number" id="optScalePct" value="0" min="0" max="100" step="5">
+        </label>
+        <label>关键帧间隔（秒，≤2）
+          <input type="number" id="optGop" value="1" min="0.5" max="2" step="0.5">
+        </label>
+        <label>画质控制方式
+          <select id="optQualityMode">
+            <option value="crf">按画质（CRF）</option>
+            <option value="target">按目标体积</option>
+          </select>
+        </label>
+        <label id="crfRow">画质 CRF（越小越清晰）
+          <input type="number" id="optCrf" placeholder="用档位默认" min="0" max="63">
+        </label>
+        <label id="targetRow" class="hidden">目标体积（200MB / 1.5GB / 20% / 5x）
+          <input type="text" id="optTarget" spellcheck="false" placeholder="200MB 或 20%">
+        </label>
+        <label id="targetStrictRow" class="check hidden" title="按预测区间的下沿求解，尽量让成片落在目标以下；代价是画质略低一点">
+          <input type="checkbox" id="optTargetStrict"> 严格不超过目标（保守求解）
+        </label>
+        <label>音频
+          <select id="optAudio">
+            <option value="copy">原样保留（推荐）</option>
+            <option value="transcode">统一转为 AAC</option>
+            <option value="drop">去掉音轨</option>
+          </select>
+        </label>
+        <label title="先整片测一次响度，再用一次性线性增益对齐到目标；成品会被独立复测，实测值写进报告。开启后音频必须重新编码（copy 做不到改音量）。">
+          音量标准化
+          <select id="optLoudness">
+            <option value="0">关闭（原样）</option>
+            <option value="-14">-14 LUFS · 流媒体</option>
+            <option value="-16">-16 LUFS · 播客 / Apple</option>
+            <option value="-18">-18 LUFS · 保守</option>
+            <option value="-23">-23 LUFS · EBU R128 广播</option>
+            <option value="custom">自定义…</option>
+          </select>
+        </label>
+        <label id="loudnessCustomRow" class="hidden">自定义目标（LUFS，负值）
+          <input type="number" id="optLoudnessCustom" min="-40" max="-5" step="1" placeholder="-16">
+        </label>
+        <label id="loudnessTpRow" class="hidden" title="真峰值上限。线性增益会被这个上限卡住；卡住时 loudnorm 会自己改成动态模式，那会改变动态范围——报告里会明说。">
+          真峰值上限
+          <select id="optLoudnessTp">
+            <option value="0">跟随预设</option>
+            <option value="-1">-1.0 dBTP</option>
+            <option value="-1.5">-1.5 dBTP</option>
+            <option value="-2">-2.0 dBTP</option>
+          </select>
+        </label>
+        <label>字幕
+          <select id="optSubs">
+            <option value="keep">原样保留（推荐）</option>
+            <option value="drop">去掉字幕</option>
+            <option value="burn">烧入画面</option>
+          </select>
+        </label>
+        <label>容器（输出封装格式）
+          <select id="optContainer">
+            <option value="">跟随档位（推荐）</option>
+            <option value="mp4">MP4（兼容性最好）</option>
+            <option value="mkv">MKV（字幕/多轨友好）</option>
+            <option value="mov">MOV（苹果生态）</option>
+            <option value="webm">WebM（网页嵌入）</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="optDeint"> 去隔行（老片源）</label>
+        <label class="check"><input type="checkbox" id="optDenoise"> 轻度降噪</label>
+        <label class="check" title="逐文件检测上下/左右黑边并裁掉——黑边白烧码率，裁掉通常白赚 20%+">
+          <input type="checkbox" id="optAutocrop"> 自动去黑边（逐文件检测）
+        </label>
+        <button id="cropCheckBtn" class="ghost" type="button">检测黑边（当前文件）</button>
+        <span id="cropNote" class="hint"></span>
+        <label class="check"><input type="checkbox" id="optHdr"> HDR → SDR 转换</label>
+        <label class="check"><input type="checkbox" id="optStrip"> 清除元数据/章节</label>
+        <label class="check" title="只有极限阶梯（A5/A6）受影响：它们本来就在拿时间换体积。关闭后按档位自带的 preset 编码。显式填了 preset 的话，以你填的为准。">
+          <input type="checkbox" id="optEffort" checked> 极限档自动提高编码精度（更慢、更小）
+        </label>
+        <label class="check" title="把源文件的时间戳复制到成品上。容器里的拍摄时间靠 -map_metadata 保留，这里管的是文件系统时间——不复制的话，按日期排序的片库里新压好的片子会全部显示成「今天」。Windows 的「创建时间」不动（那是这个文件何时出现在这块盘上的记录）。">
+          <input type="checkbox" id="optKeepTime" checked> 保留源文件的时间戳
+        </label>
+      </div>
+      <p class="hint">
+        命名模板可用变量：
+        <code>{stem}</code> <code>{profile}</code> <code>{height}p</code> <code>{codec}</code>
+        —— 编码前就知道的；
+        <code>{filesize}</code>（14.8MB）<code>{filesize_mb}</code>（14.8）
+        <code>{video_bitrate}</code>（808k）<code>{encode_time}</code>（14m26s）
+        <code>{encode_secs}</code>（866）<code>{ratio}</code>（21，即压到 21%）
+        —— 编完才知道的，成品会在编码结束后自动改名。
+        例：<code>{stem}_{filesize_mb}MB_{encode_time}</code>
+      </p>
+      <p class="hint">关键帧间隔是本项目的质量门槛：≤2 秒才能保证拖动进度条不卡死。专家模式可放宽，但输出可能无法自由跳转。</p>
+    </details>
+
+    <div class="console-plan" aria-live="polite">
+      <h3><span class="step-number">3</span> 预计结果</h3>
+      <div class="memory-status"><span id="memoryStatus" role="status">正在读取可用内存…</span><button id="memoryRefreshBtn" class="ghost" type="button">刷新内存</button></div>
+      <div id="batchTotals" class="batch-totals"><p class="empty">加入文件后显示体积、倍率与计划。</p></div>
+      <div id="planDecisions" class="plan-decisions hidden"></div>
+      <details><summary>查看逐文件计划</summary><div id="resolvedPlans"></div></details>
+    </div>
+    <div class="cta-row">
+      <button id="startBtn" class="primary big" disabled>添加到压缩队列</button>
+      <button id="previewBtn" class="ghost" disabled title="只压 6 秒样片，先试看效果">预览 6 秒</button>
+      <button id="measureBtn" class="ghost" disabled title="跑 3 段真实样片，给出准确体积与用时">精确测算体积</button>
+      <button id="targetSolveBtn" class="ghost hidden" disabled title="用真实样片反推能压到目标体积的 CRF">求解目标体积</button>
+      <span id="planHint" class="hint"></span>
+    </div>
+
+    <label class="check skip-done" title="仅跳过交付通过、且源与成品身份均未变化的记录；证据不足时保留待添加">
+      <input type="checkbox" id="skipDone">
+      <span>跳过已确认完成的文件（源与成品均未变化）</span>
+      <span id="skipDoneHint" class="hint"></span>
+    </label>
+
+    <details class="current-estimate"><summary>当前文件测算详情</summary><div id="estimateBox" class="estimate hidden"></div></details>
+
+    <!-- ===================== 批量预估 / 分组 / 总预算 (A1/C3/C1) =====================
+         三个问题一次答完：这批要跑多久、占多大；哪些文件可以用同一档位；如果整批
+         有体积上限，这个上限怎么摊到每个文件上。 -->
+    <details id="batchPanel" class="advanced">
+      <summary>批量测算 <span id="batchSummary" class="hint"></span></summary>
+      <div class="loc-detail">
+        <button id="batchEstimateBtn" class="ghost">按经验系数估算</button>
+        <button id="batchMeasureBtn" class="ghost" title="每个文件跑 3 段真实样片，准确但要等">精确测算整批（慢）</button>
+        <span id="batchProgress" class="hint"></span>
+      </div>
+      <p class="hint" id="batchBasis"></p>
+
+      <div id="groupControls" class="hidden">
+      <h3 class="log-head">自动分组（每组一个档位）</h3>
+      <p class="hint">
+        按分辨率档、时长档、编码与 HDR 自动分组 —— 同一组的文件用同一档位即可，
+        不必逐个点。分组只是建议：下面的下拉框改哪一组，就只改哪一组。
+      </p>
+      <div id="groupList" class="group-list"><p class="empty">加入文件后自动分组</p></div>
+      </div>
+
+      <div id="budgetControls" class="hidden">
+      <h3 class="log-head">总预算分配（整批不超过）</h3>
+      <p class="hint">
+        设一个整批体积上限，按「时长 × 像素」加权分到每个文件：更长的、分辨率更高的
+        分到更多预算。表格会指出哪些文件被压得比档位本身更狠，以及分配到的
+        bpp（每像素比特，预测画质的那个量）。
+      </p>
+      <div class="loc-detail">
+        <label class="inline" style="gap:6px">
+          <input type="number" id="budgetValue" min="0.1" step="0.1" value="2048" style="width:110px">
+          <select id="budgetUnit">
+            <option value="mb">MB</option>
+            <option value="gb" selected>GB</option>
+          </select>
+        </label>
+        <button id="budgetApplyBtn" class="ghost">按预算分配</button>
+        <span id="budgetHint" class="hint"></span>
+      </div>
+      <div id="budgetResult"></div>
+      </div>
+    </details>
+
+  </section>
+  <section class="panel queue-panel" id="queueSection">
+    <div class="panel-head queue-head">
+      <h2><span class="step-number">4</span> 队列与结果 <span id="queueStats" class="pill">0</span></h2>
+      <div class="panel-actions">
+        <button id="pauseAllBtn" class="ghost hidden" title="挂起所有正在编码的进程（可随时继续）">⏸ 全部暂停</button>
+        <button id="resumeAllBtn" class="primary hidden" title="继续所有已暂停的任务">▶ 全部继续</button>
+        <button id="stopAllBtn" class="ghost hidden" title="停止正在跑的，并取消还没开始的">⏹ 停止全部</button>
+        <button id="clearDoneBtn" class="ghost" title="只移除已通过校验的成功记录，保留失败及待处理项；不删除视频或历史档案">清除成功记录</button>
+        <button id="exportBtn" class="ghost">导出报告</button>
+      </div>
+    </div>
+
+    <div id="powerBanner" class="warnline hidden"></div>
+    <div id="restoreBanner" class="warnline hidden"></div>
+
+    <details id="afterPanel" class="advanced">
+      <summary>🏁 完成动作 <span id="afterSummary" class="hint"></span></summary>
+      <p class="hint">
+        提示音与关机在<strong>队列全部跑完</strong>之后执行，默认关闭。
+        <br>自动关机仅本批有效；源文件处理在上方“输出保存到哪里”中为本次任务单独选择。
+      </p>
+      <label class="check">
+        <input type="checkbox" id="afterNotify">
+        跑完后播放系统提示音
+        <span class="hint">（本机不支持 Windows 通知气泡，用系统提示音代替）</span>
+      </label>
+      <label class="check" title="关机是可取消的：Windows 会显示倒计时，本页面也会给一个「取消关机」按钮。睡眠/休眠不提供——它们没有延迟也不能取消，机器会在最后一个任务结束的瞬间直接睡过去。">
+        <input type="checkbox" id="afterPower">
+        全部跑完后自动关机
+      </label>
+      <label id="afterDelayRow" class="hidden">关机延迟
+        <select id="afterDelay">
+          <option value="30">30 秒</option>
+          <option value="60" selected>60 秒</option>
+          <option value="120">120 秒</option>
+          <option value="300">5 分钟</option>
+        </select>
+      </label>
+      <label class="check" title="只要有任务失败就不关机，留给你处理">
+        <input type="checkbox" id="afterOnlyOk" checked>
+        有失败任务时不自动关机
+      </label>
+    </details>
+
+    <div class="runtime-summary"><span id="perfSummary"></span><span id="verifySummary"></span><span id="memoryPolicySummary"></span><button id="runtimeSettingsBtn" class="ghost" type="button">运行设置</button></div>
+
+    <div id="jobList" class="job-list"><p class="empty">队列为空</p></div>
+
+    <div id="recycleConfirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="recycleConfirmTitle">
+      <div class="modal-box recycle-confirm-box">
+        <div class="modal-head"><strong id="recycleConfirmTitle">确认本次源文件处理</strong><button id="recycleConfirmClose" class="ghost" type="button" aria-label="取消并关闭">关闭</button></div>
+        <p id="recycleConfirmSummary"></p>
+        <p>仅处理下面这批任务：整批结束、交付校验通过且成品仍在时，将源文件移入回收站。失败或文件发生变化时保留，同源任务未结束时等待。</p>
+        <div id="recycleConfirmFiles" class="recycle-confirm-files"></div>
+        <p class="hint">压缩可能损失画质；如需先查看成品，可取消并关闭此选项。回收站可还原，清空后才会释放空间。重启应用会取消尚未执行的源文件处理授权。</p>
+        <div class="modal-foot"><button id="recycleConfirmCancel" class="ghost" type="button">取消，返回检查</button><button id="recycleConfirmAccept" class="primary" type="button">确认本次任务成功后移入回收站</button></div>
+      </div>
+    </div>
+
+    <details id="historyPanel" class="advanced">
+      <summary>📚 历史记录 <span id="historySummary" class="hint"></span></summary>
+      <p class="hint">
+        每一份压缩成品都在这里留档，关掉应用也还在 —— 想再看某次压缩的对比，
+        不必重新压一遍。
+      </p>
+      <div class="history-toolbar">
+        <input type="search" id="historyQuery" placeholder="搜索源文件名或成品文件名…">
+        <label class="inline" title="成品被移走或删掉的记录先收起来">
+          <input type="checkbox" id="historyOnlyExisting"> 只看能用的
+        </label>
+        <button id="historyRefreshBtn" class="ghost">刷新</button>
+        <button id="historyClearMissingBtn" class="ghost">清理失效记录</button>
+        <button id="historyClearAllBtn" class="ghost">清空历史</button>
+      </div>
+      <div class="history-bulk hidden" id="historyBulkBar">
+        <label class="inline"><input type="checkbox" id="historySelectAll"> 全选本页</label>
+        <span id="historySelCount" class="hint">未选择</span>
+        <label class="inline" id="historyAlsoWrap" title="默认关闭：删除记录不会动视频文件">
+          <input type="checkbox" id="historyAlsoDeleteFiles">
+          <span id="historyAlsoLabel">同时删除成品文件</span>
+        </label>
+        <button id="historyDeleteSelBtn" class="ghost">删除选中</button>
+        <button id="historyDeleteFilteredBtn" class="ghost hidden">删除全部筛选结果</button>
+      </div>
+      <div id="historyList" class="history-list"><p class="empty">正在读取历史…</p></div>
+      <div class="history-foot">
+        <button id="historyMoreBtn" class="ghost hidden">显示更多</button>
+      </div>
+    </details>
+  </section>
+</main>
+
+<details id="cmdPanel" class="cmd-panel">
+  <summary>当前档位将执行的 FFmpeg 命令（选中文件后实时更新）</summary>
+  <pre id="cmdText">—</pre>
+  <div class="cmd-actions">
+    <button id="copyCmdBtn" class="ghost">复制命令</button>
+    <span id="cmdRules" class="hint"></span>
+  </div>
+</details>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- ============================ 设置面板 ============================
+     一处集中「关于 + 环境 + 性能 + 校验 + 输出目录」。这些开关原本散在三个
+     <details> 里，找得到但不好找；版本与环境信息此前只存在于日志和接口里，
+     用户想知道「现在跑的是哪个版本、FFmpeg 是哪一个」只能翻命令行。 -->
+<div id="settingsOverlay" class="settings-overlay hidden">
+  <div class="settings-box" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="panel-head">
+      <h2 id="settingsTitle">设置</h2>
+      <button class="ghost" id="settingsClose">关闭</button>
+    </div>
+
+    <div class="settings-content">
+    <section class="settings-section">
+      <h3>界面显示</h3>
+      <label class="settings-line"><input type="checkbox" id="setShowAdvanced"><span>显示高级选项（手动档位与专业参数）</span></label>
+      <label class="settings-line"><input type="checkbox" id="setShowExtreme"><span>显示极限压缩档位（可能损失细节／降低尺寸）</span></label>
+      <p class="hint">选择后自动保存。开启后可在主页面切换手动模式；不会自动选用极限档位，也不改已有任务。</p>
+    </section>
+    <details id="settingsRuntime" class="settings-section">
+      <summary><b>运行与校验</b><span id="settingsRuntimeSummary" class="hint"></span></summary>
+      <h3>并行数量</h3>
+      <p class="hint" id="settingsPerfBasis"></p>
+      <div class="adv-grid">
+        <label>GPU 并行（硬件编码档位）
+          <input type="number" id="setLimitGpu" min="1" max="8" step="1" value="1">
+        </label>
+        <label>CPU 并行（软件编码档位）
+          <input type="number" id="setLimitCpu" min="1" max="4" step="1" value="1">
+        </label>
+      </div>
+      <div class="loc-detail">
+        <button id="setResetLimits" class="ghost">恢复推荐值</button>
+        <span class="hint">数量输入完成后保存；实际启动仍受内存余量限制。</span>
+      </div>
+      <h3>交付校验</h3>
+      <label class="settings-line">
+        <input type="checkbox" id="setDeepVerify">
+        <span>深度校验：额外逐帧解码整个成品（默认关闭，成倍变慢）</span>
+      </label>
+      <label class="settings-line">
+        <input type="checkbox" id="setVmafCheck">
+        <span>质量评分（VMAF）：压完抽样对比原片（默认关闭，最慢的一项）</span>
+      </label>
+      <p class="hint">基础交付校验始终执行。额外校验在成品校验阶段读取当前选择，已编码内容不会重新压缩。</p>
+      <h3>内存保护</h3>
+      <p class="hint" id="setMemoryHint"></p>
+      <p class="hint">内存不足时等待，运行中余量不足则自动暂停。手动暂停的任务不会自动继续。</p>
+      <details class="protection-details"><summary>专业保护参数</summary>
+      <label class="settings-line">
+        <input type="checkbox" id="setMemoryGuard">
+        <span>启用内存保护（默认开启）</span>
+      </label>
+      <label class="settings-line">安全余量
+        <input type="number" id="setMemoryMargin" min="1701" max="16384" step="1" style="width:110px">
+        <span class="hint">MB：留给系统与其它程序，低于它不启动新任务</span>
+      </label>
+      <label class="settings-line">运行期低水位
+        <input type="number" id="setMemoryLowWater" min="701" max="15384" step="1" style="width:110px">
+        <span class="hint">MB：可用内存跌破它就把正在跑的软件编码挂起</span>
+      </label>
+      <p class="hint">低水位必须高于 700 MB；恢复水位为低水位 + 1000 MB，安全余量不得低于恢复水位。</p>
+      </details>
+    </details>
+    <details class="settings-section"><summary><b>关于</b><span id="settingsVersion" class="hint"></span></summary>
+      <table class="about-table" id="aboutTable"><tbody><tr><td colspan="2" class="hint">正在读取…</td></tr></tbody></table>
+    </details>
+    </div>
+    <div class="settings-footer"><span id="settingsSaveStatus" role="status">更改自动保存</span><button id="settingsRetryBtn" class="ghost hidden" type="button">重试保存</button></div>
+  </div>
+</div>
+
+<script src="/app.js?v=__ASSET_SIG__" type="module"></script>
+</body>
+</html>

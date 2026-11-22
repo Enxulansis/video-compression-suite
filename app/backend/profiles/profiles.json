@@ -1,0 +1,452 @@
+{
+  "version": 4,
+  "updated": "2026-10-05 14:40",
+  "profiles": [
+    {
+      "id": "P1",
+      "name": "极速",
+      "name_en": "Turbo",
+      "summary": "NVENC 硬件 H.264，最快出片，兼容性最强",
+      "encoder": "h264_nvenc",
+      "fallback_encoder": "libx264",
+      "crf": 26,
+      "preset": "p4",
+      "pix_fmt": "yuv420p",
+      "container": "mp4",
+      "extra": {
+        "profile:v": "high",
+        "rc": "vbr",
+        "cq": 26,
+        "b:v": "0"
+      },
+      "compat": 5,
+      "ratio": 4,
+      "speed": "非常快（GPU）",
+      "playback_note": "任何设备都能播",
+      "estimated": true,
+      "expected_fraction": 0.85
+    },
+    {
+      "id": "P2",
+      "name": "最大兼容",
+      "name_en": "Max Compatibility",
+      "summary": "软件 x264，画质优先的老设备通用档",
+      "encoder": "libx264",
+      "fallback_encoder": null,
+      "crf": 23,
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "container": "mp4",
+      "extra": {
+        "profile:v": "high",
+        "level": "4.0",
+        "tune": "film"
+      },
+      "compat": 5,
+      "ratio": 2,
+      "speed": "中等（CPU）",
+      "playback_note": "任何设备都能播",
+      "estimated": true,
+      "expected_fraction": 0.45
+    },
+    {
+      "id": "P3",
+      "name": "平衡",
+      "name_en": "Balanced",
+      "summary": "NVENC 硬件 HEVC，速度与体积的最佳平衡（默认）",
+      "encoder": "hevc_nvenc",
+      "fallback_encoder": "libx265",
+      "crf": 28,
+      "preset": "p5",
+      "pix_fmt": "yuv420p",
+      "container": "mp4",
+      "extra": {
+        "profile:v": "main",
+        "rc": "vbr",
+        "cq": 28,
+        "b:v": "0",
+        "spatial-aq": "1",
+        "temporal-aq": "1",
+        "tag:v": "hvc1"
+      },
+      "compat": 4,
+      "ratio": 4,
+      "speed": "很快（GPU）",
+      "playback_note": "Win10+ / 现代手机 / 现代播放器均可",
+      "estimated": false,
+      "default": true,
+      "expected_fraction": 0.4
+    },
+    {
+      "id": "P4",
+      "name": "高压缩",
+      "name_en": "High Compression",
+      "summary": "NVENC 硬件 AV1，省空间且不用等 CPU",
+      "encoder": "av1_nvenc",
+      "fallback_encoder": "libsvtav1",
+      "crf": 32,
+      "preset": "p6",
+      "pix_fmt": "yuv420p",
+      "container": "mp4",
+      "extra": {
+        "rc": "vbr",
+        "cq": 32,
+        "b:v": "0"
+      },
+      "compat": 3,
+      "ratio": 4,
+      "speed": "很快（GPU）",
+      "playback_note": "需 2021 年后的硬件解码或较强 CPU 软解",
+      "estimated": true,
+      "expected_fraction": 0.32
+    },
+    {
+      "id": "P5",
+      "name": "极致压缩",
+      "name_en": "Extreme (CPU AV1)",
+      "summary": "SVT-AV1 软件编码，本方案压缩率上限，可挂机跑",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 32,
+      "preset": "6",
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:film-grain=8:aq-mode=2"
+      },
+      "compat": 3,
+      "ratio": 5,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议配合 PotPlayer/VLC 新版",
+      "estimated": true,
+      "expected_fraction": 0.22
+    },
+    {
+      "id": "P6",
+      "name": "极致压缩·小体积",
+      "name_en": "Extreme Small",
+      "summary": "SVT-AV1 更慢更强压缩，画质略有妥协",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 40,
+      "preset": "4",
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:film-grain=8:aq-mode=2"
+      },
+      "compat": 3,
+      "ratio": 6,
+      "speed": "很慢（CPU 满载）",
+      "playback_note": "体积优先，画质明显下降",
+      "estimated": true,
+      "expected_fraction": 0.14
+    },
+    {
+      "id": "P7",
+      "name": "老设备友好",
+      "name_en": "Legacy HEVC",
+      "summary": "软件 x265 8-bit，只认 H.265 的设备用",
+      "encoder": "libx265",
+      "fallback_encoder": null,
+      "crf": 24,
+      "preset": "slow",
+      "pix_fmt": "yuv420p",
+      "container": "mp4",
+      "extra": {
+        "profile:v": "main",
+        "tag:v": "hvc1",
+        "x265-params": "open-gop=0:repeat-headers=1:log-level=error"
+      },
+      "compat": 4,
+      "ratio": 4,
+      "speed": "慢（CPU）",
+      "playback_note": "8-bit H.265，兼容面比 10-bit 宽",
+      "estimated": true,
+      "expected_fraction": 0.32
+    },
+    {
+      "id": "P8",
+      "name": "仅重封装",
+      "name_en": "Remux Only",
+      "summary": "不重编码，只换容器（无损、秒级完成）",
+      "encoder": "copy",
+      "fallback_encoder": null,
+      "crf": 0,
+      "preset": "",
+      "pix_fmt": "",
+      "container": "mp4",
+      "extra": {},
+      "compat": 5,
+      "ratio": 1,
+      "speed": "极快（仅拷贝）",
+      "playback_note": "体积不变；仅当容器不兼容源编码时才转码音轨",
+      "estimated": true,
+      "expected_fraction": 1.0
+    },
+    {
+      "id": "A0",
+      "name": "归档·近无损",
+      "name_en": "Archive (near-lossless)",
+      "summary": "几乎不动画质，只为省体积。适合必须保真的母版备份。",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 26,
+      "preset": 4,
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:aq-mode=2"
+      },
+      "compat": 3,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议 PotPlayer/VLC 新版",
+      "estimated": true,
+      "max_edge": 0,
+      "fps_cap": 0,
+      "audio_mode": "transcode",
+      "ladder": {
+        "expected_ratio": [
+          2,
+          4
+        ],
+        "expected_vmaf": [
+          99,
+          100
+        ],
+        "measured": false,
+        "needs_confirmation": false,
+        "costs": "代价：几乎无。倍率与 VMAF 为按 CRF32=5.0× 外推，未实测"
+      },
+      "expected_multiple": 3.0,
+      "expected_fraction": 0.3333
+    },
+    {
+      "id": "A1",
+      "name": "高质量备份",
+      "name_en": "High quality",
+      "summary": "肉眼无损级，和现有 CRF32 档同一水平。",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 32,
+      "preset": 4,
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:aq-mode=2"
+      },
+      "compat": 3,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议 PotPlayer/VLC 新版",
+      "estimated": false,
+      "max_edge": 0,
+      "fps_cap": 0,
+      "audio_mode": "transcode",
+      "ladder": {
+        "expected_ratio": [
+          5,
+          6
+        ],
+        "expected_vmaf": [
+          98,
+          100
+        ],
+        "measured": true,
+        "needs_confirmation": false,
+        "costs": "实测锚点：CRF32 原生 5.0×"
+      },
+      "expected_multiple": 5.5,
+      "expected_fraction": 0.1818
+    },
+    {
+      "id": "A2",
+      "name": "平衡",
+      "name_en": "Balanced",
+      "summary": "默认推荐：体积明显变小，正常观看看不出差别。",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 40,
+      "preset": 4,
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:aq-mode=2"
+      },
+      "compat": 3,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议 PotPlayer/VLC 新版",
+      "estimated": false,
+      "max_edge": 0,
+      "fps_cap": 0,
+      "audio_mode": "transcode",
+      "ladder": {
+        "expected_ratio": [
+          8,
+          10
+        ],
+        "expected_vmaf": [
+          97,
+          99
+        ],
+        "measured": true,
+        "needs_confirmation": false,
+        "costs": "实测锚点：CRF40 8.2× / VMAF 98.2"
+      },
+      "expected_multiple": 9.0,
+      "expected_fraction": 0.1111
+    },
+    {
+      "id": "A3",
+      "name": "省空间",
+      "name_en": "Space saver",
+      "summary": "明显省空间，细看能发现轻微柔化。",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 48,
+      "preset": 4,
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:aq-mode=2"
+      },
+      "compat": 3,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议 PotPlayer/VLC 新版",
+      "estimated": false,
+      "max_edge": 0,
+      "fps_cap": 0,
+      "audio_mode": "transcode",
+      "ladder": {
+        "expected_ratio": [
+          11,
+          16
+        ],
+        "expected_vmaf": [
+          93,
+          96
+        ],
+        "measured": true,
+        "needs_confirmation": false,
+        "costs": "实测锚点：CRF48 12.6×/95.5、CRF52 15.1×/93.6"
+      },
+      "expected_multiple": 13.5,
+      "expected_fraction": 0.0741
+    },
+    {
+      "id": "A4",
+      "name": "小屏（≤720p）",
+      "name_en": "Small screen (720p)",
+      "summary": "降到 720p，手机上看着足够好，倍率大幅提升。",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 46,
+      "preset": 4,
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:aq-mode=2"
+      },
+      "compat": 3,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议 PotPlayer/VLC 新版",
+      "estimated": false,
+      "max_edge": 1280,
+      "fps_cap": 0,
+      "audio_mode": "transcode",
+      "ladder": {
+        "expected_ratio": [
+          18,
+          24
+        ],
+        "expected_vmaf": [
+          82,
+          88
+        ],
+        "measured": true,
+        "needs_confirmation": false,
+        "costs": "实测锚点：720p CRF48 20.9× / VMAF 84.8。代价：放弃 1080p/4K 细节"
+      },
+      "expected_multiple": 21.0,
+      "expected_fraction": 0.0476
+    },
+    {
+      "id": "A5",
+      "name": "极限（≤480p）",
+      "name_en": "Extreme (480p)",
+      "summary": "只求能看清内容。会明显劣化，需要二次确认。",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 50,
+      "preset": 4,
+      "auto_effort": 2,
+      "auto_effort_note": "自动提精度 preset 4→2：本机实测（720p/CRF46 合成素材）体积再小约 9%、编码时间约 1.6 倍，VMAF 略升；可用「极限档自动提高精度」开关关闭",
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:aq-mode=2"
+      },
+      "compat": 3,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议 PotPlayer/VLC 新版",
+      "estimated": false,
+      "max_edge": 854,
+      "fps_cap": 0,
+      "audio_mode": "transcode",
+      "ladder": {
+        "expected_ratio": [
+          30,
+          45
+        ],
+        "expected_vmaf": [
+          60,
+          75
+        ],
+        "measured": true,
+        "needs_confirmation": true,
+        "costs": "实测锚点：480p CRF52 40.5× / VMAF 64.8。代价：分辨率降到 480p 级，细节基本消失"
+      },
+      "expected_multiple": 37.5,
+      "expected_fraction": 0.0267
+    },
+    {
+      "id": "A6",
+      "name": "只保「看得见」",
+      "name_en": "Barely visible",
+      "summary": "最低档：360p 以下并可降帧。默认不提供，需主动开启并二次确认。",
+      "encoder": "libsvtav1",
+      "fallback_encoder": null,
+      "crf": 54,
+      "preset": 6,
+      "auto_effort": 2,
+      "auto_effort_note": "自动提精度 preset 6→2：本机实测（720p/CRF46 合成素材）体积再小约 14%、编码时间约 1.8 倍，VMAF 略升；可用「极限档自动提高精度」开关关闭",
+      "pix_fmt": "yuv420p10le",
+      "container": "mp4",
+      "extra": {
+        "svtav1-params": "irefresh-type=2:tune=0:enable-overlays=1:scd=1:aq-mode=2"
+      },
+      "compat": 3,
+      "speed": "较慢（CPU 满载）",
+      "playback_note": "10-bit AV1；老播放器可能不支持，建议 PotPlayer/VLC 新版",
+      "estimated": true,
+      "max_edge": 640,
+      "fps_cap": 15,
+      "audio_mode": "transcode",
+      "ladder": {
+        "expected_ratio": [
+          45,
+          70
+        ],
+        "expected_vmaf": [
+          0,
+          60
+        ],
+        "measured": false,
+        "needs_confirmation": true,
+        "costs": "代价：≤360p + 降帧到 15fps + 可能去音轨。倍率为按 bpp 外推，未实测"
+      },
+      "expected_multiple": 57.5,
+      "expected_fraction": 0.0174
+    }
+  ],
+  "ladder_note": "A0–A6 是「目标导向」的极限压缩阶梯：每档写明分辨率上限、帧率上限、预期倍率区间与预期 VMAF 区间。倍率强依赖源码率密度——同样的 A3 档，源若是已压过的低码率文件，倍率会掉到 1× 附近。A5/A6 需二次确认。"
+}

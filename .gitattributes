@@ -1,0 +1,42 @@
+# Line-ending policy
+* text=auto eol=lf
+*.vbs binary
+#
+# CRITICAL: Windows batch files MUST keep CRLF endings.
+# cmd.exe mis-tracks its parse offset on LF-only batch files and silently eats
+# bytes -- `chcp` becomes `cher.`, `pwsh` becomes `user` -- which surfaces as a
+# cascade of "is not recognized as an internal or external command" errors.
+# This bug shipped once already; do not let git normalise it back to LF.
+#
+# PowerShell tolerates LF, but these are Windows launchers and are kept CRLF so
+# no tool has to guess.  Run app\check_launchers.ps1 to verify.
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+*.ps1           text eol=crlf
+*.psm1          text eol=crlf
+*.psd1          text eol=crlf
+
+# Shell launchers for non-Windows use must stay LF.
+*.sh            text eol=lf
+
+# Source and docs may use the platform default; git decides.
+*.py            text
+*.js            text
+*.css           text
+*.html          text
+*.json          text
+*.md            text
+
+# Never touch binary-ish assets.
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.webp          binary
+*.gif           binary
+*.ico           binary
+*.mp4           binary
+*.mkv           binary
+*.zip           binary
+*.tgz           binary
+*.exe           binary
+*.dll           binary
