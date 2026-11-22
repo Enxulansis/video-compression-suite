@@ -39,6 +39,12 @@ def main():
     parser.add_argument('--downloads', required=True, type=Path)
     parser.add_argument('--media-dir', required=True, type=Path)
     args = parser.parse_args()
+    source_root = Path(__file__).resolve().parents[1]
+    application_license_inputs = [source_root.parent / name for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md')]
+    missing_licenses = [str(path) for path in application_license_inputs if not path.is_file()]
+    if missing_licenses:
+        raise FileNotFoundError('Missing project license files: ' + ', '.join(missing_licenses))
+
     media_inputs = media_runtime_files(args.media_dir)
     version = subprocess.run([str(args.media_dir / 'ffmpeg.exe'), '-version'],
                              capture_output=True, encoding='utf-8', errors='replace', timeout=10,
@@ -61,6 +67,13 @@ def main():
                 'media_runtime_files': list(MEDIA_FILES), 'ffmpeg_linkage': 'shared',
                 'ffmpeg_banner': banner,
                 'ffmpeg_archive_sha256': '8030dc469fbde247b84cfc21a5c421f3965ffe779bc35de08d78966e0c4a272c'}
+
+    application_licenses = licenses / 'application'
+    application_licenses.mkdir()
+    for source in application_license_inputs:
+        target = application_licenses / source.name
+        shutil.copy2(source, target)
+        manifest['files'][target.relative_to(args.output).as_posix()] = sha256(target)
 
     for source in media_inputs:
         target = media / source.name
@@ -100,7 +113,6 @@ def main():
         if source.is_dir():
             shutil.copytree(source, licenses / 'runtime' / record['name'])
 
-    source_root = Path(__file__).resolve().parents[1]
     source_files = list((source_root / 'backend').glob('*.py'))
     source_files += list((source_root / 'backend/core').glob('*.py'))
     source_files += list((source_root / 'packaging').glob('*.py'))
@@ -153,6 +165,8 @@ Python、桌面程序依赖、FFmpeg、FFprobe 和 WebView2 离线安装器均�
 
 第三方组件说明与许可证位于安装目录的 _internal\\licenses；
 FFmpeg 的对应版本原始源码也在该目录中。
+项目 MIT 许可与开发贡献说明位于 _internal\\licenses\\application。
+本项目主要由 OpenAI Codex 与 DeepSeek 完成；第三方组件保留各自许可。
 ''', encoding='utf-8')
     print(json.dumps({'payload': str(args.output), 'manifest_files': len(manifest['files'])}, ensure_ascii=False))
 

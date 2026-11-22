@@ -26,7 +26,7 @@ python app/backend/app.py --port 8787
 例如在 PowerShell 中运行包装清单回归：
 
 ```powershell
-python -B app/tests/test_packaging_media.py
+python -B -m unittest -v app.tests.test_packaging_media app.tests.test_packaging_licenses
 ```
 
 其他测试按脚本分别运行；部分媒体、桌面、浏览器和真实回收站测试需要对应环境与隔离前提，不应直接对个人数据运行全部测试。使用独立于真实用户数据的新测试目录。
@@ -52,6 +52,8 @@ python -B app/tests/test_packaging_media.py
 ```
 
 媒体运行文件采用九项明确清单：两个 EXE 和七个版本化 DLL。脚本在准备阶段检查文件完整和共享构建配置，记录 SHA256，PyInstaller 构建时去除重复的根层 DLL。
+
+项目根目录的 `LICENSE` 与 `THIRD_PARTY_NOTICES.md` 也是打包必需输入，缺失时不会创建 payload；它们进入安装目录 `_internal/licenses/application/` 并记录 SHA256。MIT 适用于自有源码，第三方组件保留各自许可。
 
 `app/packaging/run_bounded.py` 为验证提供超时、进程树回收与内存余量保护。被冻结的 `--self-test`、`--test-window` 入口要求全新私有 `VCS_DATA_DIR`，并拒绝指向已有 store；原生窗口验证需要正常 Windows 桌面会话。构建和测试的日志保存在对应运行目录。
 
