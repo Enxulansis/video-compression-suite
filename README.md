@@ -15,7 +15,7 @@ _file:
 
 当前公开项目源码。Windows 离线安装包已完成本机验证，暂存于发布草稿；正在补齐所含 FFmpeg 外部库的对应源码和构建材料，完成后会在 [Releases](https://github.com/Enxulansis/video-compression-suite/releases) 开放下载。
 
-安装包文件名为 `视频压缩套件_0.7.1_x64_离线完整版.exe`，公开后下载并双击安装，从开始菜单打开即可。
+安装包为 Windows x64 离线安装 EXE，公开后下载并双击安装，从开始菜单打开即可。
 
 - 安装包约 **297.4 MiB**，程序本体约 **267.0 MiB**。
 - 内置 Python、桌面依赖、FFmpeg／FFprobe、应用本地 VC 运行库和 WebView2 完整离线安装程序，无需配置开发环境或 PATH。
