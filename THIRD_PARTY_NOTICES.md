@@ -1,7 +1,7 @@
 ---
 _file:
   created: "2026-11-22 19:57"
-  updated: "2026-11-22 20:15"
+  updated: "2026-11-23 20:57"
   status: final
 ---
 
@@ -25,7 +25,9 @@ FFmpeg 的两个工具与七个共享 DLL 一并提供，保留原始名称。�
 
 安装目录 `_internal/licenses/ffmpeg/` 包含构建方的 `LICENSE`、`README.txt` 及 FFmpeg 修订 `894da5ca7d` 的源码归档。第三方分发来源和文件 SHA256 记录在 `_internal/release-info.json`。
 
-**安装包公开状态**：现有归档包含 FFmpeg 主体源码；该次构建所用全部外部库的准确源码、补丁及构建脚本尚待取得和核对。因此 Windows 安装包暂存发布草稿，当前公开源码仓库不包含这些第三方二进制。
+FFmpeg 主体、外部库固定版本源码、原始许可、构建配置及 MSYS2 配方／补丁在 [v0.7.1 发布页](https://github.com/Enxulansis/video-compression-suite/releases/tag/v0.7.1) 的 `FFmpeg-8.0.1-full-shared-sources.tar` 附件提供。构建方表示未应用功能性补丁，依赖采用上游标准构建说明；本项目未重新编译媒体内核。
+
+rav1e 锁定依赖中的 `simd_helpers 0.1.0` 原包声明 MIT，作者为 Luca Barbato。原始声明随源码保留，另附 [标准 MIT 条款与来源说明](docs/licenses/simd_helpers-0.1.0.txt)。
 
 - 构建方：[Gyan FFmpeg builds](https://www.gyan.dev/ffmpeg/builds/)
 - FFmpeg 对应修订：[894da5ca7d](https://github.com/FFmpeg/FFmpeg/commit/894da5ca7d)

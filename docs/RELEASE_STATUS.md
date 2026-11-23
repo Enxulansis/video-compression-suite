@@ -1,7 +1,7 @@
 ---
 _file:
   created: "2026-11-22 20:00"
-  updated: "2026-11-22 20:20"
+  updated: "2026-11-23 20:57"
   status: final
 ---
 
@@ -21,13 +21,13 @@ _file:
 
 ## 当前公开范围
 
-项目自有源码已按 MIT 准备公开，第三方库与 Windows 安装 EXE 不进入源码 Git 历史。安装包暂存 Release 草稿，尚未开放公共下载。
+项目自有源码按 MIT 公开，Windows 离线安装 EXE 通过 [v0.7.1 Release](https://github.com/Enxulansis/video-compression-suite/releases/tag/v0.7.1) 分发；第三方源码附件与安装包放在同一发布页，不进入源码 Git 历史。
 
 候选安装包的 `_internal/licenses/application/` 已包含本项目 MIT LICENSE、第三方声明与 Codex／DeepSeek 开发贡献说明，两个文件的字节内容和清单 SHA256 均已验证。
 
-安装包包含 Gyan 的 FFmpeg 8.0.1 full shared GPL v3 构建。现有材料有 FFmpeg 主体修订 `894da5ca7d` 的源码、实际配置、许可和依赖版本清单；全部外部依赖的准确源码、补丁及本次构建脚本尚未取得和核对。取得并整理完整对应材料后，再公开二进制下载。Gyan 发布页自动生成的 Source code 归档不包含这套完整构建材料。
+安装包包含 Gyan 的 FFmpeg 8.0.1 full shared GPL v3 构建。同页 `FFmpeg-8.0.1-full-shared-sources.tar` 提供 FFmpeg 主体修订 `894da5ca7d`、66 个固定 Git 条目及子模块、MSYS2 固定版本源码／配方、原始许可和 Shaderc／rav1e 锁定依赖。实际 configure 输出与编译器信息随材料提供。
 
-2026-11-22 已向构建方发送对应源码申请，等待其提供该版本的完整材料。
+构建方已提供固定提交和工具链清单，并表示未应用功能性补丁、采用上游标准构建说明。本项目未重新编译媒体内核或验证逐字节可复现。`simd_helpers` 原始 MIT 声明保留，并配标准许可文本和作者署名。
 
 核对入口：
 

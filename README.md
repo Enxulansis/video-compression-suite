@@ -1,7 +1,7 @@
 ---
 _file:
   created: "2026-11-22 19:57"
-  updated: "2026-11-22 19:57"
+  updated: "2026-11-23 20:57"
   status: final
 ---
 
@@ -13,9 +13,9 @@ _file:
 
 ## 下载与安装
 
-当前公开项目源码。Windows 离线安装包已完成本机验证，暂存于发布草稿；正在补齐所含 FFmpeg 外部库的对应源码和构建材料，完成后会在 [Releases](https://github.com/Enxulansis/video-compression-suite/releases) 开放下载。
+[下载 v0.7.1 Windows 离线安装包](https://github.com/Enxulansis/video-compression-suite/releases/download/v0.7.1/VideoCompressionSuite-0.7.1-Windows-x64-Offline-Setup.exe)，或查看 [发布页与使用说明](https://github.com/Enxulansis/video-compression-suite/releases/tag/v0.7.1)。
 
-安装包为 Windows x64 离线安装 EXE，公开后下载并双击安装，从开始菜单打开即可。
+下载 EXE 后双击安装，从开始菜单打开即可。普通用户只需安装包，无需下载源码附件。
 
 - 安装包约 **297.4 MiB**，程序本体约 **267.0 MiB**。
 - 内置 Python、桌面依赖、FFmpeg／FFprobe、应用本地 VC 运行库和 WebView2 完整离线安装程序，无需配置开发环境或 PATH。
@@ -85,4 +85,4 @@ LICENSE        项目自有源码的 MIT 许可
 
 本项目自有源码按 [MIT License](LICENSE) 发布。
 
-FFmpeg、Python、PyWebView、pythonnet、VC 运行库和 WebView2 等第三方组件适用各自许可。0.7.1 安装包使用启用 GPL 的 FFmpeg 8.0.1 full shared 构建，其许可、构建配置说明及对应 FFmpeg 源码归档随安装包提供；位置为 `_internal/licenses`。第三方组件的许可范围见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+FFmpeg、Python、PyWebView、pythonnet、VC 运行库和 WebView2 等第三方组件适用各自许可。0.7.1 安装包使用启用 GPL 的 FFmpeg 8.0.1 full shared 构建，随包许可位于 `_internal/licenses`；FFmpeg 主体、外部库固定版本源码及构建材料在 [同一发布页](https://github.com/Enxulansis/video-compression-suite/releases/tag/v0.7.1) 提供。第三方组件的许可范围见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
